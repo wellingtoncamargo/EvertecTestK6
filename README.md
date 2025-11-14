@@ -89,3 +89,29 @@ set “K6_WEB_DASHBOARD=true”
 k6 run --out web-dashboard=export=test-report.html .\blazedemo-performance.js
 ```
 
+##  Considerações mediante aos testes realizados
+
+Teste de Performance:
+```bash
+O teste de carga demonstrou que a aplicação BlazeDemo não suporta 250 requisições por segundo
+no fluxo completo de compra. O K6 atingiu o limite máximo de 400 VUs, mas ainda assim não conseguiu
+gerar o RPS solicitado, resultando em mais de 11 mil iterações dropadas.
+
+O tempo de resposta p90 chegou a 3.4 segundos, acima do SLA de 2s, indicando saturação. A causa
+é a latência elevada do fluxo multi-etapas, que demanda mais VUs para manter a taxa configurada.
+
+Para evoluir o teste, eu aumentaria maxVUs, isolaria cada endpoint para análise de gargalo,
+ajustaria thresholds específicos por etapa e, se necessário, usaria execução distribuída no
+K6 Cloud para aplicar a carga desejada com maior precisão.
+```
+Teste de Pico:
+```bash
+O teste de pico atingiu o limite máximo de VUs (400) antes de alcançar os 250 RPS configurados.
+Isso ocorreu porque o tempo de resposta médio aumentou significativamente durante o pico, exigindo
+mais VUs do que o disponível para manter a taxa de chegada. Como resultado, o K6 dropou mais de 3500
+iterações e o p90 ultrapassou 3,7 segundos, acima do SLA desejado.
+
+Para melhorar, eu aumentaria o maxVUs, separaria o fluxo em cenários independentes para identificar
+o maior gargalo, ajustaria thresholds por rota e, se necessário, executaria o teste em ambiente distribuído
+ou K6 Cloud para atingir cargas maiores de forma estável.
+```
